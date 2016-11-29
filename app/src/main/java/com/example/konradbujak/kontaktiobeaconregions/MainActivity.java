@@ -1,8 +1,6 @@
 package com.example.konradbujak.kontaktiobeaconregions;
 
 import android.Manifest;
-import android.app.PendingIntent;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -11,9 +9,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.app.NotificationCompat.WearableExtender;
 
 import com.kontakt.sdk.android.ble.configuration.ActivityCheckConfiguration;
 import com.kontakt.sdk.android.ble.configuration.ScanPeriod;
@@ -28,6 +23,7 @@ import com.kontakt.sdk.android.ble.manager.listeners.ScanStatusListener;
 import com.kontakt.sdk.android.ble.manager.listeners.simple.SimpleEddystoneListener;
 import com.kontakt.sdk.android.ble.manager.listeners.simple.SimpleIBeaconListener;
 import com.kontakt.sdk.android.ble.manager.listeners.simple.SimpleScanStatusListener;
+import com.kontakt.sdk.android.ble.spec.EddystoneFrameType;
 import com.kontakt.sdk.android.common.KontaktSDK;
 import com.kontakt.sdk.android.common.profile.IBeaconDevice;
 import com.kontakt.sdk.android.common.profile.IBeaconRegion;
@@ -36,6 +32,7 @@ import com.kontakt.sdk.android.common.profile.IEddystoneNamespace;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -43,6 +40,8 @@ public class MainActivity extends AppCompatActivity {
 
     private ProximityManager KontaktManager;
     String TAG = "MyActivity";
+    //Replace (Your Secret API key) with your API key aquierd from the Kontakt.io Web Panel
+    public static String API_KEY = "Your Secret API key";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -99,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
     }
     public void sdkInitialise()
     {
-        KontaktSDK.initialize("Put your secret API Key here");
+        KontaktSDK.initialize(API_KEY);
         if (KontaktSDK.isInitialized())
             Log.v(TAG, "SDK initialised");
     }
@@ -107,6 +106,7 @@ public class MainActivity extends AppCompatActivity {
         KontaktManager = new ProximityManager(this);
         KontaktManager.configuration()
                 .scanMode(ScanMode.BALANCED)
+                .eddystoneFrameTypes(EnumSet.of(EddystoneFrameType.UID))
                 .scanPeriod(ScanPeriod.create(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(20)))
                 .activityCheckConfiguration(ActivityCheckConfiguration.DEFAULT);
     }
@@ -119,27 +119,29 @@ public class MainActivity extends AppCompatActivity {
     private void configureSpaces() {
         Collection<IBeaconRegion> beaconRegions = new ArrayList<>();
         Collection<IEddystoneNamespace> eddystoneNamespaces = new ArrayList<>();
-        eddystoneNamespaces.add(EddystoneNamespace.create("namespace1", "f7826da64fa24e988024", false));
-        eddystoneNamespaces.add(EddystoneNamespace.create("namespace2", "2b17b17d1dea47d1a690", false));
+        eddystoneNamespaces.add(EddystoneNamespace.builder().identifier("namespace1").namespace("f7826da64fa24e988024").build());
+        eddystoneNamespaces.add(EddystoneNamespace.builder().identifier("namespace2").namespace("2b17b17d1dea47d1a690").build());
         IBeaconRegion region1 = new BeaconRegion.Builder()
-                .setIdentifier("region1")
-                .setProximity(UUID.fromString("17826da4-4fa3-4e98-8024-bc5b71e0893e"))
-                .setMinor(1009)
+                .identifier("region1")
+                .proximity(UUID.fromString("17826da4-4fa3-4e98-8024-bc5b71e0893e"))
+                .minor(1009)
                 .build();
         IBeaconRegion region2 = new BeaconRegion.Builder()
-                .setIdentifier("region2")
-                .setProximity(UUID.fromString("17826da4-4fa3-4e98-8024-bc5b71e0893e"))
-                .setMinor(1014)
+                .identifier("region2")
+                .proximity(UUID.fromString("17826da4-4fa3-4e98-8024-bc5b71e0893e"))
+                .minor(1014)
                 .build();
         IBeaconRegion region3 = new BeaconRegion.Builder()
-                .setIdentifier("region3")
-                .setProximity(UUID.fromString("17826da4-4fa3-4e98-8024-bc5b71e0893e"))
-                .setMajor(2000)
+                .identifier("region3")
+                .proximity(UUID.fromString("17826da4-4fa3-4e98-8024-bc5b71e0893e"))
+                .major(2000)
                 .build();
         beaconRegions.add(region1);
         beaconRegions.add(region2);
         beaconRegions.add(region3);
-        KontaktManager.spaces().iBeaconRegions(beaconRegions);
+        KontaktManager.spaces()
+                .iBeaconRegions(beaconRegions)
+                .eddystoneNamespaces(eddystoneNamespaces);
         Log.d(TAG,"Regions configured");
     }
     private void showToast(final String message) {
@@ -155,13 +157,13 @@ public class MainActivity extends AppCompatActivity {
         return new SimpleEddystoneListener()
         {
             @Override public void onEddystoneDiscovered(IEddystoneDevice eddystone, IEddystoneNamespace eddystoneNamespaces) {
-                if ("namespace1".equals(eddystoneNamespaces.getName())){
-                    Log.d(TAG, eddystoneNamespaces.getName() + " discovered! UniqueID: " + eddystone.getUniqueId());
-                    showToast(eddystoneNamespaces.getName() + " entered");
+                if ("namespace1".equals(eddystoneNamespaces.getIdentifier())){
+                    Log.d(TAG, eddystoneNamespaces.getIdentifier() + " discovered! UniqueID: " + eddystone.getUniqueId());
+                    showToast(eddystoneNamespaces.getIdentifier() + " entered");
                 }
-                if ("namespace2".equals(eddystoneNamespaces.getName())){
-                    Log.d(TAG, eddystoneNamespaces.getName() + " discovered! UniqueID: " + eddystone.getUniqueId());
-                    showToast(eddystoneNamespaces.getName() + " entered");
+                if ("namespace2".equals(eddystoneNamespaces.getIdentifier())){
+                    Log.d(TAG, eddystoneNamespaces.getIdentifier() + " discovered! UniqueID: " + eddystone.getUniqueId());
+                    showToast(eddystoneNamespaces.getIdentifier() + " entered");
                 }
             }
         };
