@@ -10,7 +10,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 1. A [Kontakt.io Panel](https://panel.kontakt.io/signin) account with few beacons there
 2. Android Studio
-3. Emulator or physical device with Android OS 4.4 or higher
+3. Device with Android OS 4.4 or higher
 4. Java 6 or higher
 
 ### Installing
