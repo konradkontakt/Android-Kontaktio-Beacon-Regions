@@ -11,12 +11,13 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.kontakt.sdk.android.ble.configuration.ActivityCheckConfiguration;
+import com.kontakt.sdk.android.ble.configuration.ScanMode;
 import com.kontakt.sdk.android.ble.configuration.ScanPeriod;
-import com.kontakt.sdk.android.ble.configuration.scan.ScanMode;
 import com.kontakt.sdk.android.ble.connection.OnServiceReadyListener;
 import com.kontakt.sdk.android.ble.device.BeaconRegion;
 import com.kontakt.sdk.android.ble.device.EddystoneNamespace;
 import com.kontakt.sdk.android.ble.manager.ProximityManager;
+import com.kontakt.sdk.android.ble.manager.ProximityManagerFactory;
 import com.kontakt.sdk.android.ble.manager.listeners.EddystoneListener;
 import com.kontakt.sdk.android.ble.manager.listeners.IBeaconListener;
 import com.kontakt.sdk.android.ble.manager.listeners.ScanStatusListener;
@@ -103,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
             Log.v(TAG, "SDK initialised");
     }
     private void configureProximityManager() {
-        KontaktManager = new ProximityManager(this);
+        KontaktManager = ProximityManagerFactory.create(this);
         KontaktManager.configuration()
                 .scanMode(ScanMode.BALANCED)
                 .eddystoneFrameTypes(EnumSet.of(EddystoneFrameType.UID))
